@@ -30,7 +30,7 @@
     const db = initMockDB({
         title: "Fundamentals of Frontend System Design",
         body: "Learning to use Intersection Observer"
-    });
+    }, 200, 5);
 
     function createCardElement(title, body) {
         const element = template.content.cloneNode(true).firstElementChild;
@@ -47,7 +47,21 @@
      * 4. Update fragment
      * 5. Append fragment to "list" container
      */
-    const observer = null;
+    let page = 0;
+    const observer = new IntersectionObserver(async([entry]) => {
+        if (entry.isIntersecting) {
+            const data = await db.getPage(page++);
+            const fragment = new DocumentFragment();
+            data.forEach(({title, body}) => {
+                fragment.appendChild(createCardElement(title, body));
+            });
+            list.appendChild(fragment);
+        }
+    }, {
+        threshold: 1
+    });
+
+    observer.observe(observerElement);
 
 </script>
 </body>
