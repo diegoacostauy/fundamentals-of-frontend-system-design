@@ -9,7 +9,7 @@
             <h3 class="card__title"></h3>
             <div class="card__body">
                 <div class='card__body__image'></div>
-                <section class='card__body__content'>
+                <section class='card__body__content' contenteditable="">
                 </section>
             </div>
         </article>
@@ -39,7 +39,7 @@
     const list = document.getElementById('list');
     const observerElement = document.getElementById('bottom-observer');
 
-    const mutationObserver = new MutationObserver((_) => {
+    const mutationObserver = new MutationObserver((entries) => {
         /*
          * @todo
          *
@@ -50,16 +50,30 @@
          * 4. Replace the node with a newly created node
          * 5. Keep focus on the element
          */
-    })
+
+        entries.forEach((entry) => {
+            const {target, type} = entry;
+            if (type === 'characterData' && SUPPORTED_ELEMENTS.has(target.textContent)) {
+                const heading = getHeading(target);
+                target.replaceWith(heading);
+                heading.focus();
+            }
+        });
+    });
+
     let page = 0;
     const observer = new IntersectionObserver(async ([bottom]) => {
         if (bottom.isIntersecting) {
-            observerElement.textContent = "Loading";
+            observerElement.textContent = "Loading...";
             const data = await db.getPage(page++);
             const fragment = new DocumentFragment();
             data.forEach(({title, body}) => {
                 const card = createCardElement(title, body);
                 fragment.appendChild(card);
+                mutationObserver.observe(card, {
+                    characterData: true,
+                    subtree: true
+                });
                 // @todo register observer
             });
 
